@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
@@ -15,8 +16,15 @@ public class SleeplessNightsFunction implements Function<List<SleepingSession>, 
             return new SleepAnalysisResult<>("Количество бессоных ночей", 0L);
         }
 
-        LocalDateTime firstStart = sessions.get(0).getStart();
-        LocalDateTime lastEnd = sessions.get(sessions.size() - 1).getEnd();
+        LocalDateTime firstStart = sessions.stream()
+                .map(SleepingSession::getStart)
+                .min(Comparator.naturalOrder())
+                .orElseThrow();
+
+        LocalDateTime lastEnd = sessions.stream()
+                .map(SleepingSession::getEnd)
+                .max(Comparator.naturalOrder())
+                .orElseThrow();
 
         LocalDate startDate;
         if (firstStart.toLocalTime().isAfter(LocalTime.NOON)) {

@@ -2,6 +2,8 @@ package ru.yandex.practicum.sleeptracker;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -9,15 +11,14 @@ import java.util.stream.Collectors;
 public class SleepTrackerApp {
 
     public static void main(String[] args) {
-        String timeFile = "sleep_log.txt";
+        if (args.length == 0) {
+            System.out.println("Укажите путь к файлу в качестве аргумента командной строки");
+            return;
+        }
 
+        String filePath = args[0];
         try {
-            List<SleepingSession> sessions = loadSession(timeFile);
-
-            if (sessions.isEmpty()) {
-                System.out.println("Файл пуст или содежрит неверные данные");
-                return;
-            }
+            List<SleepingSession> sessions = loadSession(filePath);
             FUNCTION_LIST.forEach(function ->
                     System.out.println(function.apply(sessions)));
         } catch (IOException e) {
@@ -27,11 +28,7 @@ public class SleepTrackerApp {
     }
 
     public static List<SleepingSession> loadSession(String file) throws IOException {
-        InputStream from = SleepTrackerApp.class.getClassLoader().getResourceAsStream(file);
-        if (from == null) {
-            throw new IOException("Файл не найден в папке resources" + file);
-        }
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(from, StandardCharsets.UTF_8))) {
+        try (BufferedReader reader = Files.newBufferedReader(Path.of(file), StandardCharsets.UTF_8)) {
             return reader.lines()
                     .filter(line -> !line.isBlank())
                     .map(SleepingSession::parse)

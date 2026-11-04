@@ -16,16 +16,28 @@ public class ChronoTypeFunction implements Function<List<SleepingSession>, Sleep
                 .filter(this::isValidNightSession)
                 .map(this::determineType)
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+        if (counts.isEmpty()) {
+            return new SleepAnalysisResult<>("Хронотип пользователя", ChronoType.PIGEON);
+        }
 
-        ChronoType resultType = counts.entrySet().stream()
-                .reduce((e1, e2) -> {
-                    if (e1.getValue() > e2.getValue()) return e1;
-                    if (e2.getValue() > e1.getValue()) return e2;
-                    return Map.entry(ChronoType.PIGEON, e1.getValue());
-                })
+        long maxCount = counts.values().stream()
+                .mapToLong(Long::longValue)
+                .max()
+                .orElse(0L);
+
+        List<ChronoType> maxTypes = counts.entrySet().stream()
+                .filter(entry -> entry.getValue() == maxCount)
                 .map(Map.Entry::getKey)
-                .orElse(ChronoType.PIGEON);
-        return new SleepAnalysisResult<>("Хронотип пользователя", resultType);
+                .collect(Collectors.toList());
+
+        ChronoType result;
+        if (maxTypes.size() == 1) {
+            result = maxTypes.get(0);
+        } else {
+            result = ChronoType.PIGEON;
+        }
+        return new SleepAnalysisResult<>("Хронотип пользователя", result);
+
     }
 
     private boolean isValidNightSession(SleepingSession session) {
